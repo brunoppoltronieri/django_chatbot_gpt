@@ -1,16 +1,19 @@
 from django.shortcuts import render,redirect, get_object_or_404
 from django.http import JsonResponse
 import openai
-from senha import API_KEY
+#from senha import API_KEY
 
 from django.contrib import auth
 from django.contrib.auth.models import User
-from .models import Chat, Feedbacks
+from .models import Chat, Feedbacks, API_KEY
 
 from django.utils import timezone
 
-#openai_api_key = 'YOUR_API_KEY' # Replace YOUR_API_KEY with your openai apikey 
-openai.api_key = API_KEY
+
+try:
+    openai.api_key = API_KEY.objects.order_by("id")[0].api_key
+except:
+    openai.api_key = ""
 
 def ask_openai(message):
     response = openai.ChatCompletion.create(

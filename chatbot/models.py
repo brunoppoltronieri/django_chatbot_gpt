@@ -23,3 +23,6 @@ class Feedbacks(models.Model):
 
     def __str__(self):
         return f'{self.user.username}: {self.message}'
+    
+class API_KEY(models.Model):
+    api_key = models.TextField(null=False)
