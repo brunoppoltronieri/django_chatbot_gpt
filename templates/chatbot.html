@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+
+{% block styles %}
+<style>
+  body,
+  html {
+    height: 100%;
+  }
+
+  .messages-box {
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .messages-list {
+    padding-left: 0;
+  }
+
+  .message {
+    margin-bottom: 15px;
+    list-style: none;
+  }
+
+  .message-text {
+    padding: 10px;
+    border-radius: 5px;
+  }
+
+  .sent {
+    background-color: #dcf8c6;
+    align-self: flex-end;
+  }
+
+  .received {
+    background-color: #f1f0f0;
+    align-self: flex-start;
+  }
+
+  .message-form {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 10px;
+    background-color: #f8f9fa;
+  }
+
+  .message-input {
+    flex: 1;
+    border-radius: 0;
+    border-right: none;
+  }
+
+  .btn-send {
+    border-radius: 0;
+    border-width: 1px 1px 1px 1px; /* aqui, cada lado possui uma borda de largura diferente */
+    border-style: solid; /* estilos de borda diferentes para cima-baixo e esquerda-direita */
+    border-color: #000 #000 #000 #000; /* uma cor de borda para cada lado */
+  }
+
+  .chat-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+<div class="chat-container">
+  <div class="card flex-grow-1">
+    <div class="card-header bg-primary text-white">Chat</div>
+    {% if user.is_authenticated %}
+    <div class="card-header bg-primary text-white"><b>Bem vindo(a), {{user.username}}</b> <a style="color: yellow;"
+        href="logout">Sair</a></div>
+    {% else %}
+    <div class="card-header bg-primary text-white"><a style="color: yellow;" href="login">Login</a> <a
+        style="color: yellow;" href="register">Register</a></div>
+    {% endif %}
+    <div class="card-body messages-box">
+
+      <ul class="list-unstyled messages-list">
+
+        <!-- <li class="message received">
+          <div class="message-text">
+            <div class="message-sender">
+              <b>AI Chatbot</b>
+            </div>
+            <div class="message-content">
+              Hi {{user.username}}, I am your AI Chatbot, you can ask me anything.
+            </div>
+          </div>
+        </li> -->
+
+
+        {% for chat in chats %}
+        {% if chat.user == request.user %}
+
+
+        <li class="message sent">
+          <div class="message-text">
+            <div class="message-sender">
+              <b>Você</b>
+            </div>
+            <div class="message-content">
+              {{chat.message|linebreaks}}
+            </div>
+          </div>
+        </li>
+
+        <li class="message received">
+          <div class="message-text">
+            <div class="message-sender">
+              <b>GPT</b>
+            </div>
+            <div class="message-content">
+              {{chat.response|linebreaks}}
+            </div>
+          </div>
+        </li>
+
+        {% endif %}
+        {% endfor %}
+
+      </ul>
+
+    </div>
+    <br><br>
+    <br><br>
+    <br><br>
+  </div>
+  <form class="message-form">
+    {%csrf_token%}
+    <div class="input-group">
+      <input type="text" class="form-control message-input" placeholder="Digite sua mensagem...">
+      <div class="input-group-append">
+        <button type="submit" class="btn btn-primary btn-send">Enviar</button>
+        <button onclick="confirmNewChat()" class="btn btn-primary btn-send">Novo Chat</button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<script>
+
+  function ShowAlert() {
+  alert("Obrigado pela sua avaliação!");
+  }
+
+  function getAssessment() {
+    var score = prompt("Por favor avalie as respostas geradas pelo modelo de GPT digitando alguma das seguintes notas:\n1 - Se o modelo respondeu corretamente a todas as perguntas.\n2 - Se o modelo deixou a desejar em alguma de suas respostas.\n3 - Se as respostas geradas pelo modelo foram muito ruins e não tinham nada a ver com o contexto das perguntas.\nRespostas com valores diferentes de 1, 2 ou 3 não serão consideradas na avaliação do modelo.");
+    if (score !== null && score !== "" && score > 0 && score < 4) {
+      ShowAlert();
+    }
+    window.location.href="delete_messages/"+score;
+  }
+
+  function confirmNewChat() {
+    if (confirm("Deseja realmente iniciar um novo Chat?\n\nVocê perderá o histórico da conversa atual.")) {
+      getAssessment();
+    }
+  }
+
+  const messagesList = document.querySelector('.messages-list');
+  const messageForm = document.querySelector('.message-form');
+  const messageInput = document.querySelector('.message-input');
+
+  messageForm.addEventListener('submit', (event) => {
+    event.preventDefault();
+
+    const message = messageInput.value.trim();
+    if (message.length === 0) {
+      return;
+    }
+
+    const messageItem = document.createElement('li');
+    messageItem.classList.add('message', 'sent');
+    messageItem.innerHTML = `
+      <div class="message-text">
+        <div class="message-sender">
+          <b>Você</b>
+        </div>
+        <div class="message-content">
+          ${message.replace(/\n/g,"<br>","<br>")}
+        </div>
+      </div>`;
+    messagesList.appendChild(messageItem);
+
+    messageInput.value = '';
+
+    fetch('', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        'csrfmiddlewaretoken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+        'message': message
+      })
+    })
+      .then(response => response.json())
+      .then(data => {
+        const response = data.response;
+        const messageItem = document.createElement('li');
+        messageItem.classList.add('message', 'received');
+        messageItem.innerHTML = `
+        <div class="message-text">
+          <div class="message-sender">
+            <b>GPT</b>
+          <div>
+          <div class="message-content">
+            ${response.replace(/\n/g,"<br>")}
+          </div>
+        </div>
+        `;
+        messagesList.appendChild(messageItem);
+      });
+  });
+
+</script>
+
+{% endblock %}
