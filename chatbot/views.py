@@ -24,8 +24,10 @@ def ask_openai(message):
         # n=1,
         # stop=None,
         # temperature=0.7,
+
+        #Você é um especialista em linguagem de programação C e responde apenas sobre assuntos relacionados a linguagem de programação C.
         messages=[
-            {"role": "system", "content": "You are an helpful assistant."},
+            {"role": "system", "content": "You are an expert in the C programming language and answer only on topics related to the C programming language."},
             {"role": "user", "content": message},
         ]
     )
