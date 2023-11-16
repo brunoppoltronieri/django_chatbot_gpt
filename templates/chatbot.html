@@ -153,8 +153,12 @@
     var score = prompt("Por favor avalie as respostas geradas pelo modelo de GPT digitando alguma das seguintes notas:\n1 - Se o modelo respondeu corretamente a todas as perguntas.\n2 - Se o modelo deixou a desejar em alguma de suas respostas.\n3 - Se as respostas geradas pelo modelo foram muito ruins e não tinham nada a ver com o contexto das perguntas.\nRespostas com valores diferentes de 1, 2 ou 3 não serão consideradas na avaliação do modelo.");
     if (score !== null && score !== "" && score > 0 && score < 4) {
       ShowAlert();
+      window.location.href="delete_messages/"+score;
     }
-    window.location.href="delete_messages/"+score;
+    else {
+      score = 0;
+      window.location.href="delete_messages/"+score;
+    }
   }
 
   function confirmNewChat() {
